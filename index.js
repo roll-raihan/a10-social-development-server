@@ -25,11 +25,20 @@ app.get('/', (req, res) => {
 async function run() {
     try {
         await client.connect();
-        
+
+        const db = client.db('social_db');
+        const treesCollection = db.collection('trees');
+
+        app.post('/trees', async (req, res) => {
+            const newTrees = req.body;
+            const result = await treesCollection.insertOne(newTrees);
+            res.send(result);
+        })
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
-       
+
     }
 }
 run().catch(console.dir);
