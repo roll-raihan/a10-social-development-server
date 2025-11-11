@@ -28,7 +28,9 @@ async function run() {
 
         const db = client.db('social_db');
         const treesCollection = db.collection('trees');
+        const joinedEventsCollection = db.collection('joinedEvents');
 
+        // tree collection APIs
         app.post('/trees', async (req, res) => {
             const newTrees = req.body;
             const result = await treesCollection.insertOne(newTrees);
@@ -54,6 +56,29 @@ async function run() {
             const result = await treesCollection.deleteOne(query);
             res.send(result);
         })
+
+        // User joins an event collection APIs
+        app.post('/join-event', async (req, res) => {
+            const { userId, userName, userEmail, eventId, eventTitle, eventDate } = req.body;
+
+            if (!userId || !eventId) {
+                return res.status(400).send({ message: 'Missing user or event info' });
+            }
+
+            const joinData = {
+                userId,
+                userName,
+                userEmail,
+                eventId: new ObjectId(eventId),
+                eventTitle,
+                eventDate,
+                joinedAt: new Date(),
+            };
+
+            const result = await joinedEventsCollection.insertOne(joinData);
+            res.send(result);
+        });
+
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
