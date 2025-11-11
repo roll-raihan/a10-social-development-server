@@ -81,6 +81,52 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/events/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const query = { _id: new ObjectId(id) };
+                const result = await eventsCollection.findOne(query);
+
+                if (!result) {
+                    return res.status(404).send({ message: 'Event not found' });
+                }
+
+                res.send(result);
+
+            } catch (error) {
+                console.error('Error fetching event by ID:', error);
+                res.status(500).send({ message: 'Failed to fetch event', error });
+            }
+        });
+
+
+        app.patch('/events/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const updatedEvent = req.body;
+
+                const filter = { _id: new ObjectId(id) };
+                const updateDoc = {
+                    $set: {
+                        event_title: updatedEvent.event_title,
+                        description: updatedEvent.description,
+                        event_type: updatedEvent.event_type,
+                        thumbnail: updatedEvent.thumbnail,
+                        location: updatedEvent.location,
+                        event_date: updatedEvent.event_date
+                    }
+                };
+
+                const result = await eventsCollection.updateOne(filter, updateDoc);
+                res.send(result);
+
+            } catch (error) {
+                console.error('Error updating event:', error);
+                res.status(500).send({ message: 'Failed to update event', error });
+            }
+        });
+
+
 
         // User joins an event collection APIs
         app.post('/join-event', async (req, res) => {
