@@ -29,6 +29,7 @@ async function run() {
         const db = client.db('social_db');
         const treesCollection = db.collection('trees');
         const joinedEventsCollection = db.collection('joinedEvents');
+        const eventsCollection = db.collection('events');
 
         // tree collection APIs
         app.post('/trees', async (req, res) => {
@@ -66,6 +67,14 @@ async function run() {
             const result = await treesCollection.deleteOne(query);
             res.send(result);
         })
+
+        // events collection APIs
+        app.post('/events', async (req, res) => {
+            const event = req.body;
+            const result = await eventsCollection.insertOne(event);
+            res.send(result);
+        });
+
 
         // User joins an event collection APIs
         app.post('/join-event', async (req, res) => {
