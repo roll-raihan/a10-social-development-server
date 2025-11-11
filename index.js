@@ -41,6 +41,22 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/trees', async (req, res) => {
+            try {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const upcomingEvents = treesCollection.find({
+                    event_date: { $gte: today }
+                }).sort({ event_date: 1 });
+                const result = await upcomingEvents.toArray();
+
+                res.json(result);
+            } catch (err) {
+                res.status(500).json({ message: 'Error fetching upcoming events.', error: err.message });
+            }
+        })
+
         app.delete('/trees/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -59,4 +75,3 @@ run().catch(console.dir);
 app.listen(port, () => {
     console.log(`Social server is running on port: ${port}`);
 })
-// qGUH4M6H26CWkd0m
