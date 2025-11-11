@@ -150,6 +150,51 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/join-event', async (req, res) => {
+            const cursor = joinedEventsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        });
+
+        // app.get('/join-event', async (req, res) => {
+        //     try {
+        //         const email = req.query.email; // get email from query string
+        //         if (!email) {
+        //             return res.status(400).send({ message: "Email query parameter is required" });
+        //         }
+
+        //         // Find only events joined by this user
+        //         const cursor = joinedEventsCollection
+        //             .find({ userEmail: email })
+        //             .sort({ eventDate: 1 }); // optional: sort by eventDate ascending
+
+        //         const result = await cursor.toArray();
+        //         res.send(result);
+
+        //     } catch (error) {
+        //         console.error('Error fetching joined events:', error);
+        //         res.status(500).send({ message: 'Failed to fetch joined events', error });
+        //     }
+        // });
+
+
+        app.get('/join-event/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const query = { _id: new ObjectId(id) };
+                const result = await joinedEventsCollection.findOne(query);
+
+                if (!result) {
+                    return res.status(404).send({ message: 'Joined event not found' });
+                }
+
+                res.send(result);
+
+            } catch (error) {
+                console.error('Error fetching joined event by ID:', error);
+                res.status(500).send({ message: 'Failed to fetch joined event', error });
+            }
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
