@@ -37,11 +37,21 @@ async function run() {
             res.send(result);
         })
 
+        // app.get('/trees', async (req, res) => {
+        //     const cursor = treesCollection.find();
+        //     const result = await cursor.toArray();
+        //     res.send(result);
+        // })
+
         app.get('/trees', async (req, res) => {
-            const cursor = treesCollection.find();
+            const today = new Date();
+            const cursor = treesCollection.find({
+                event_date: { $gte: today.toISOString().split('T')[0] }
+            });
             const result = await cursor.toArray();
             res.send(result);
-        })
+        });
+
 
         app.get('/trees/:id', async (req, res) => {
             const id = req.params.id;
