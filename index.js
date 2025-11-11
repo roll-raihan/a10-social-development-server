@@ -75,6 +75,12 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/events', async (req, res) => {
+            const cursor = eventsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+
 
         // User joins an event collection APIs
         app.post('/join-event', async (req, res) => {
