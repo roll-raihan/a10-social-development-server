@@ -168,11 +168,30 @@ async function run() {
             res.send(result);
         });
 
+        // app.get('/join-event', async (req, res) => {
+        //     const cursor = joinedEventsCollection.find().sort({ "eventDate": 1 });
+        //     const result = await cursor.toArray();
+        //     res.send(result)
+        // });
+
         app.get('/join-event', async (req, res) => {
-            const cursor = joinedEventsCollection.find();
-            const result = await cursor.toArray();
-            res.send(result)
+            try {
+                const { email } = req.query;
+                let query = {};
+
+                if (email) {
+                    query.userEmail = email;
+                }
+
+                const cursor = joinedEventsCollection.find(query).sort({ "eventDate": 1 });
+                const result = await cursor.toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Error fetching joined events:', error);
+                res.status(500).send({ message: 'Failed to fetch joined events', error });
+            }
         });
+
 
         app.get('/join-event/:id', async (req, res) => {
             try {
