@@ -39,20 +39,38 @@ async function run() {
         })
 
         // app.get('/trees', async (req, res) => {
-        //     const cursor = treesCollection.find();
+        //     const today = new Date();
+        //     const cursor = treesCollection.find({
+        //         event_date: { $gte: today.toISOString().split('T')[0] }
+        //     });
         //     const result = await cursor.toArray();
         //     res.send(result);
-        // })
+        // });
 
         app.get('/trees', async (req, res) => {
-            const today = new Date();
-            const cursor = treesCollection.find({
-                event_date: { $gte: today.toISOString().split('T')[0] }
-            });
-            const result = await cursor.toArray();
-            res.send(result);
-        });
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const { type, search } = req.query;
 
+                const query = {
+                    event_date: { $gte: today }
+                };
+
+                if (type && type !== 'All') {
+                    query.event_type = type;
+                }
+
+                if (search) {
+                    query.event_title = { $regex: search, $options: 'i' };
+                }
+
+                const result = await treesCollection.find(query).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Error fetching filtered events:', error);
+                res.status(500).send({ message: 'Failed to fetch events' });
+            }
+        });
 
         app.get('/trees/:id', async (req, res) => {
             const id = req.params.id;
@@ -155,28 +173,6 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result)
         });
-
-        // app.get('/join-event', async (req, res) => {
-        //     try {
-        //         const email = req.query.email; // get email from query string
-        //         if (!email) {
-        //             return res.status(400).send({ message: "Email query parameter is required" });
-        //         }
-
-        //         // Find only events joined by this user
-        //         const cursor = joinedEventsCollection
-        //             .find({ userEmail: email })
-        //             .sort({ eventDate: 1 }); // optional: sort by eventDate ascending
-
-        //         const result = await cursor.toArray();
-        //         res.send(result);
-
-        //     } catch (error) {
-        //         console.error('Error fetching joined events:', error);
-        //         res.status(500).send({ message: 'Failed to fetch joined events', error });
-        //     }
-        // });
-
 
         app.get('/join-event/:id', async (req, res) => {
             try {
