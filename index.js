@@ -97,8 +97,9 @@ async function run() {
                 }
 
                 if (email) {
-                    query["organizer.email"] = email; 
+                    query["organizer.email"] = { $regex: `^${email}$`, $options: 'i' };
                 }
+
 
                 const result = await treesCollection.find(query).toArray();
                 res.send(result);
