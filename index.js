@@ -88,19 +88,16 @@ async function run() {
                     event_date: { $gte: today }
                 };
 
-                // Filter by event type (if provided)
                 if (type && type !== 'All') {
                     query.event_type = type;
                 }
 
-                // Filter by search keyword (title)
                 if (search) {
                     query.event_title = { $regex: search, $options: 'i' };
                 }
 
-                // 👇 NEW: Filter by creator_email (for Manage Events)
                 if (email) {
-                    query.creator_email = email;
+                    query["organizer.email"] = email; 
                 }
 
                 const result = await treesCollection.find(query).toArray();
