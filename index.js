@@ -6,14 +6,14 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-// app.use(cors());
-app.use(cors({
-    origin: [
-        "https://social-development-greenroots.web.app",
-        "https://social-development-greenroots.firebaseapp.com"
-    ],
-    credentials: true
-}));
+app.use(cors());
+// app.use(cors({
+//     origin: [
+//         "https://social-development-greenroots.web.app",
+//         "https://social-development-greenroots.firebaseapp.com"
+//     ],
+//     credentials: true
+// }));
 app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.n2kdiwk.mongodb.net/?appName=Cluster0`;
 
@@ -54,30 +54,64 @@ async function run() {
         //     res.send(result);
         // });
 
+        // app.get('/trees', async (req, res) => {
+        //     try {
+        //         const today = new Date().toISOString().split('T')[0];
+        //         const { type, search } = req.query;
+
+        //         const query = {
+        //             event_date: { $gte: today }
+        //         };
+
+        //         if (type && type !== 'All') {
+        //             query.event_type = type;
+        //         }
+
+        //         if (search) {
+        //             query.event_title = { $regex: search, $options: 'i' };
+        //         }
+
+        //         const result = await treesCollection.find(query).toArray();
+        //         res.send(result);
+        //     } catch (error) {
+        //         console.error('Error fetching filtered events:', error);
+        //         res.status(500).send({ message: 'Failed to fetch events' });
+        //     }
+        // });
+
         app.get('/trees', async (req, res) => {
             try {
                 const today = new Date().toISOString().split('T')[0];
-                const { type, search } = req.query;
+                const { type, search, email } = req.query; // 👈 added email
 
                 const query = {
                     event_date: { $gte: today }
                 };
 
+                // Filter by event type (if provided)
                 if (type && type !== 'All') {
                     query.event_type = type;
                 }
 
+                // Filter by search keyword (title)
                 if (search) {
                     query.event_title = { $regex: search, $options: 'i' };
                 }
 
+                // 👇 NEW: Filter by creator_email (for Manage Events)
+                if (email) {
+                    query.creator_email = email;
+                }
+
                 const result = await treesCollection.find(query).toArray();
                 res.send(result);
+
             } catch (error) {
                 console.error('Error fetching filtered events:', error);
                 res.status(500).send({ message: 'Failed to fetch events' });
             }
         });
+
 
         app.get('/trees/:id', async (req, res) => {
             const id = req.params.id;
@@ -218,7 +252,7 @@ async function run() {
             }
         });
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
 
