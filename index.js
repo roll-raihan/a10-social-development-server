@@ -27,7 +27,7 @@ const client = new MongoClient(uri, {
 
 app.get('/', (req, res) => {
     res.send('Social development server is running!!');
-})
+});
 
 async function run() {
     try {
@@ -39,46 +39,6 @@ async function run() {
         const eventsCollection = db.collection('events');
 
         // tree collection APIs
-        app.post('/trees', async (req, res) => {
-            const newTrees = req.body;
-            const result = await treesCollection.insertOne(newTrees);
-            res.send(result);
-        })
-
-        // app.get('/trees', async (req, res) => {
-        //     const today = new Date();
-        //     const cursor = treesCollection.find({
-        //         event_date: { $gte: today.toISOString().split('T')[0] }
-        //     });
-        //     const result = await cursor.toArray();
-        //     res.send(result);
-        // });
-
-        // app.get('/trees', async (req, res) => {
-        //     try {
-        //         const today = new Date().toISOString().split('T')[0];
-        //         const { type, search } = req.query;
-
-        //         const query = {
-        //             event_date: { $gte: today }
-        //         };
-
-        //         if (type && type !== 'All') {
-        //             query.event_type = type;
-        //         }
-
-        //         if (search) {
-        //             query.event_title = { $regex: search, $options: 'i' };
-        //         }
-
-        //         const result = await treesCollection.find(query).toArray();
-        //         res.send(result);
-        //     } catch (error) {
-        //         console.error('Error fetching filtered events:', error);
-        //         res.status(500).send({ message: 'Failed to fetch events' });
-        //     }
-        // });
-
         app.get('/trees', async (req, res) => {
             try {
                 const today = new Date().toISOString().split('T')[0];
@@ -100,43 +60,40 @@ async function run() {
                     query["organizer.email"] = { $regex: `^${email}$`, $options: 'i' };
                 }
 
-
                 const result = await treesCollection.find(query).toArray();
                 res.send(result);
-
             } catch (error) {
                 console.error('Error fetching filtered events:', error);
                 res.status(500).send({ message: 'Failed to fetch events' });
             }
         });
 
-
         app.get('/trees/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await treesCollection.findOne(query);
             res.send(result);
-        })
+        });
 
-        app.delete('/trees/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await treesCollection.deleteOne(query);
-            res.send(result);
-        })
-
-        // events collection APIs
-        app.post('/events', async (req, res) => {
-            const event = req.body;
-            const result = await eventsCollection.insertOne(event);
+        app.post('/trees', async (req, res) => {
+            const newTrees = req.body;
+            const result = await treesCollection.insertOne(newTrees);
             res.send(result);
         });
 
+        app.delete('/trees/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await treesCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        // events collection APIs
         app.get('/events', async (req, res) => {
             const cursor = eventsCollection.find();
             const result = await cursor.toArray();
-            res.send(result)
-        })
+            res.send(result);
+        });
 
         app.get('/events/:id', async (req, res) => {
             try {
@@ -149,13 +106,17 @@ async function run() {
                 }
 
                 res.send(result);
-
             } catch (error) {
                 console.error('Error fetching event by ID:', error);
                 res.status(500).send({ message: 'Failed to fetch event', error });
             }
         });
 
+        app.post('/events', async (req, res) => {
+            const event = req.body;
+            const result = await eventsCollection.insertOne(event);
+            res.send(result);
+        });
 
         app.patch('/events/:id', async (req, res) => {
             try {
@@ -176,16 +137,48 @@ async function run() {
 
                 const result = await eventsCollection.updateOne(filter, updateDoc);
                 res.send(result);
-
             } catch (error) {
                 console.error('Error updating event:', error);
                 res.status(500).send({ message: 'Failed to update event', error });
             }
         });
 
-
-
         // User joins an event collection APIs
+        app.get('/join-event', async (req, res) => {
+            try {
+                const { email } = req.query;
+                let query = {};
+
+                if (email) {
+                    query.userEmail = email;
+                }
+
+                const cursor = joinedEventsCollection.find(query).sort({ "eventDate": 1 });
+                const result = await cursor.toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Error fetching joined events:', error);
+                res.status(500).send({ message: 'Failed to fetch joined events', error });
+            }
+        });
+
+        app.get('/join-event/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const query = { _id: new ObjectId(id) };
+                const result = await joinedEventsCollection.findOne(query);
+
+                if (!result) {
+                    return res.status(404).send({ message: 'Joined event not found' });
+                }
+
+                res.send(result);
+            } catch (error) {
+                console.error('Error fetching joined event by ID:', error);
+                res.status(500).send({ message: 'Failed to fetch joined event', error });
+            }
+        });
+
         app.post('/join-event', async (req, res) => {
             const { userId, userName, userEmail, eventId, eventTitle, eventDate } = req.body;
 
@@ -207,57 +200,17 @@ async function run() {
             res.send(result);
         });
 
-        // app.get('/join-event', async (req, res) => {
-        //     const cursor = joinedEventsCollection.find().sort({ "eventDate": 1 });
-        //     const result = await cursor.toArray();
-        //     res.send(result)
-        // });
-
-        app.get('/join-event', async (req, res) => {
-            try {
-                const { email } = req.query;
-                let query = {};
-
-                if (email) {
-                    query.userEmail = email;
-                }
-
-                const cursor = joinedEventsCollection.find(query).sort({ "eventDate": 1 });
-                const result = await cursor.toArray();
-                res.send(result);
-            } catch (error) {
-                console.error('Error fetching joined events:', error);
-                res.status(500).send({ message: 'Failed to fetch joined events', error });
-            }
-        });
-
-
-        app.get('/join-event/:id', async (req, res) => {
-            try {
-                const id = req.params.id;
-                const query = { _id: new ObjectId(id) };
-                const result = await joinedEventsCollection.findOne(query);
-
-                if (!result) {
-                    return res.status(404).send({ message: 'Joined event not found' });
-                }
-
-                res.send(result);
-
-            } catch (error) {
-                console.error('Error fetching joined event by ID:', error);
-                res.status(500).send({ message: 'Failed to fetch joined event', error });
-            }
-        });
-
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
-
+        // You might want to keep the client connection open
+        // If you want to close it, uncomment the next line
+        // await client.close();
     }
-}
+} // This closes the run() function
+
 run().catch(console.dir);
 
 app.listen(port, () => {
     console.log(`Social server is running on port: ${port}`);
-})
+}); // This closes the app.listen() callback
