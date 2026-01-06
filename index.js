@@ -7,14 +7,8 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-// app.use(cors({
-//     origin: [
-//         "https://social-development-greenroots.web.app",
-//         "https://social-development-greenroots.firebaseapp.com"
-//     ],
-//     credentials: true
-// }));
 app.use(express.json());
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.n2kdiwk.mongodb.net/?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -23,10 +17,6 @@ const client = new MongoClient(uri, {
         strict: true,
         deprecationErrors: true,
     }
-});
-
-app.get('/', (req, res) => {
-    res.send('Social development server is running!!');
 });
 
 async function run() {
@@ -180,7 +170,7 @@ async function run() {
         });
 
         app.post('/join-event', async (req, res) => {
-            const { userId, userName, userEmail, eventId, eventTitle, eventDate } = req.body;
+            const { userId, userName, userEmail, eventId, eventTitle, eventDate, eventLocation, eventType } = req.body;
 
             if (!userId || !eventId) {
                 return res.status(400).send({ message: 'Missing user or event info' });
@@ -194,6 +184,8 @@ async function run() {
                 eventTitle,
                 eventDate,
                 joinedAt: new Date(),
+                eventLocation,
+                eventType
             };
 
             const result = await joinedEventsCollection.insertOne(joinData);
@@ -207,10 +199,14 @@ async function run() {
         // If you want to close it, uncomment the next line
         // await client.close();
     }
-} // This closes the run() function
+}
 
 run().catch(console.dir);
 
+app.get('/', (req, res) => {
+    res.send('Social development server is running!!');
+});
+
 app.listen(port, () => {
     console.log(`Social server is running on port: ${port}`);
-}); // This closes the app.listen() callback
+});
