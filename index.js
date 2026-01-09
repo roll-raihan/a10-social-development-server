@@ -21,7 +21,8 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
+        // Deploy fix
 
         const db = client.db('social_db');
         const treesCollection = db.collection('trees');
